@@ -1,0 +1,903 @@
+#include <stdio.h>
+#include <stdlib.h>
+#include <GL\glut.h>
+#include <math.h>
+#include <time.h>
+#include <iostream>
+
+#define PI 3.1415926535898
+#define janela_altura 500
+#define janela_largura 800
+
+int merX[3] = { -450, 450, -450 }, merY[3],
+subX[2] = { -450, 450 }, subY[2],
+tubX[3] = { -450,450,-450 }, tubY[3];
+
+int placar = 0, posX = 0, posY = 0, tiroX = 0, tiroY = 0, qtdtubaroes = 0,
+qtdsubmarinos = 0, qtdmergulhadores = 0, randomico = 0, contador = 0;
+
+float ang, barraoxigenio = 0;
+
+bool esquerda = false, tiro = false, tiroesquerda = false, tirodireita = false, mergulhador[3] = { false },
+submarinos[2] = { false }, tubaroes[3] = { false }, rodando = true, pausado = false,
+oxigenio = false, trocacor;
+
+void display(void);
+void animacao(int valor);
+void tela(GLsizei w, GLsizei h);
+void keyboard(unsigned char tecla, int x, int y);
+
+void DesenhaFundo();
+void DesenhaSubmarino();
+void DesenhaBala();
+void DesenhaMergulhador(int x, int y);
+void DesenhaTubarao(int x, int y);
+void DesenhaSubmarinoInimigo(int x, int y);
+
+void colocarMegulhadores();
+void colocarTubaroes();
+void colocarSubInimigo();
+
+void animarMergulhador();
+void animarTubaroes();
+void animarSubInimigo();
+void animarOxigenio();
+void atirar();
+
+void colisaoSubmarinos();
+void colisaoMergulhador();
+void colisaoTubarao();
+void colisaoTiroTubarao();
+
+int main(int argc, char** argv) {
+	glutInit(&argc, argv);
+	glutInitDisplayMode(GLUT_DOUBLE);
+	glutInitWindowSize(janela_largura, janela_altura);
+	glutInitWindowPosition(200, 100);
+	glutCreateWindow("Bruno Pergher - Sea Quest");
+	glutReshapeFunc(tela);
+	glutDisplayFunc(display);
+	glutKeyboardFunc(&keyboard);
+	glutTimerFunc(5, animacao, 1);
+	glutMainLoop();
+	return 0;
+}
+
+void DesenhaFundo() {
+	//FUNDO 
+	//FAIXA INFERIOR
+	glBegin(GL_QUADS);
+	glColor3f(0, 0, 0);
+	glVertex3f(-450, -220, 0);
+	glVertex3f(450, -220, 0);
+	glVertex3f(450, -250, 0);
+	glVertex3f(-450, -250, 0);
+	glEnd();
+	glColor3f(0, 1, 0.8);
+
+	//FAIXA DO OXIGENIO
+	glBegin(GL_QUADS);
+	glColor3f(0, 1, 1);
+	glVertex3f(-450, -170, 0);
+	glVertex3f(450, -170, 0);
+	glVertex3f(450, -220, 0);
+	glVertex3f(-450, -220, 0);
+	glEnd();
+
+	//BARRA VERMELHA OXIGENIO
+	glColor3f(0.24, 0.7, 0.44);
+	glBegin(GL_QUADS);
+	glColor3f(1, 0, 0);
+	glVertex3f(-290, -185, 0);
+	glVertex3f(0, -185, 0);
+	glVertex3f(0, -205, 0);
+	glVertex3f(-290, -205, 0);
+	glEnd();
+
+	//BARRA CINZA DO OXIGENIO
+	glPushMatrix();
+	glBegin(GL_QUADS);
+	glColor3f(0.66, 0.66, 0.66);
+	glVertex3f(-290, -185, 0);
+	glVertex3f(barraoxigenio, -185, 0);
+	glVertex3f(barraoxigenio, -205, 0);
+	glVertex3f(-290, -205, 0);
+	glEnd();
+	glPopMatrix();
+
+	//GRAMA EM BAIXO
+	glBegin(GL_QUADS);
+	glColor3f(0.24, 0.7, 0.44);
+	glVertex3f(-450, -155, 0);
+	glVertex3f(450, -155, 0);
+	glVertex3f(450, -170, 0);
+	glVertex3f(-450, -170, 0);
+	glEnd();
+
+	//LINHA QUE SAI DA AGUA
+	glLineWidth(5);
+	glColor3f(0, 0, 0);
+	glBegin(GL_LINES);
+	glVertex3f(-450, 145, 0);
+	glVertex3f(450, 145, 0);
+	glEnd();
+
+	//CEU ACIMA DA LINHA
+	glBegin(GL_QUADS);
+	glColor3f(0, 1, 1);
+	glVertex3f(-450, 250, 0);
+	glVertex3f(450, 250, 0);
+	glColor3f(0, 1, 1);
+	glVertex3f(450, 145, 0);
+	glVertex3f(-450, 145, 0);
+	glEnd();
+}
+
+void DesenhaSubmarino() {
+	if (esquerda) {
+		glPushMatrix();
+		glTranslatef(posX, posY, 0);
+		glColor3f(0.44, 0.5, 0.56);
+		glBegin(GL_POLYGON);
+		glVertex3f(-15, 10, 0);
+		glVertex3f(-100, 10, 0);
+		glVertex3f(-100, -2, 0);
+		glVertex3f(-15, -2, 0);
+		glEnd();
+
+		glBegin(GL_POLYGON);
+		glVertex3f(0, 2, 0);
+		glVertex3f(-85, 2, 0);
+		glVertex3f(-85, -10, 0);
+		glVertex3f(0, -10, 0);
+		glEnd();
+
+		//LUNETA
+		glBegin(GL_POLYGON);
+		glVertex3f(-45, 20, 0);
+		glVertex3f(-70, 20, 0);
+		glVertex3f(-70, 10, 0);
+		glVertex3f(-45, 10, 0);
+		glEnd();
+
+		glBegin(GL_POLYGON);
+		glVertex3f(-55, 23, 0);
+		glVertex3f(-70, 23, 0);
+		glVertex3f(-70, 20, 0);
+		glVertex3f(-55, 20, 0);
+		glEnd();
+	}
+	else
+	{
+		//CORPO
+		glPushMatrix();
+		glTranslatef(posX, posY, 0);
+		glColor3f(0.47, 0.53, 0.6);
+		glBegin(GL_POLYGON);
+		glVertex3f(15, 10, 0);
+		glVertex3f(100, 10, 0);
+		glVertex3f(100, -2, 0);
+		glVertex3f(15, -2, 0);
+		glEnd();
+
+		glBegin(GL_POLYGON);
+		glVertex3f(0, 2, 0);
+		glVertex3f(85, 2, 0);
+		glVertex3f(85, -10, 0);
+		glVertex3f(0, -10, 0);
+		glEnd();
+
+		//LUNETA
+		glBegin(GL_POLYGON);
+		glVertex3f(45, 20, 0);
+		glVertex3f(70, 20, 0);
+		glVertex3f(70, 10, 0);
+		glVertex3f(45, 10, 0);
+		glEnd();
+
+		glBegin(GL_POLYGON);
+		glVertex3f(55, 23, 0);
+		glVertex3f(70, 23, 0);
+		glVertex3f(70, 20, 0);
+		glVertex3f(55, 20, 0);
+		glEnd();
+	}
+}
+
+void DesenhaSubmarinoInimigo(int x, int y) {
+	//CORPO
+	glPushMatrix();
+	glTranslatef(x, y, 0);
+	glColor3f(0, 0, 0);
+
+	glBegin(GL_POLYGON);
+	glVertex3f(-15, 10, 0);
+	glVertex3f(-100, 10, 0);
+	glVertex3f(-100, -2, 0);
+	glVertex3f(-15, -2, 0);
+	glEnd();
+
+	//LUNETA
+	glBegin(GL_POLYGON);
+	glVertex3f(-45, 20, 0);
+	glVertex3f(-70, 20, 0);
+	glVertex3f(-70, 10, 0);
+	glVertex3f(-45, 10, 0);
+	glEnd();
+
+	glBegin(GL_POLYGON);
+	glVertex3f(-55, 23, 0);
+	glVertex3f(-70, 23, 0);
+	glVertex3f(-70, 20, 0);
+	glVertex3f(-55, 20, 0);
+	glEnd();
+}
+
+void DesenhaBala() {
+	//BALA
+	glPushMatrix();
+	glTranslatef(tiroX, tiroY, 0);
+	glColor3f(1, 1, 1);
+	glLineWidth(3);
+	glBegin(GL_LINES);
+	glVertex3f(80, 5, 0);
+	glVertex3f(100, 5, 0);
+	glEnd();
+	glPopMatrix();
+}
+
+void DesenhaTubarao(int x, int y) {
+	glPushMatrix();
+	glTranslatef(x, y, 0);
+
+	//CORPO
+	glBegin(GL_POLYGON_BIT);
+	glColor3f(0, 0, 0);
+	glVertex2f(0, 7);
+	glVertex2f(30, 7);
+	glVertex2f(30, 15);
+	glVertex2f(0, 15);
+	glEnd();
+
+	//BARBATANA DE BAIXO
+	glBegin(GL_QUADS);
+	glVertex2f(0, 7);
+	glVertex2f(13, 7);
+	glVertex2f(13, 5);
+	glVertex2f(0, 5);
+	glEnd();
+	glBegin(GL_QUADS);
+	glVertex2f(0, 5);
+	glVertex2f(5, 5);
+	glVertex2f(5, 3);
+	glVertex2f(0, 3);
+	glEnd();
+
+	//RABO
+	glBegin(GL_QUADS);
+	glVertex2f(0, 7);
+	glVertex2f(-5, 7);
+	glVertex2f(-5, 13);
+	glVertex2f(0, 13);
+	glEnd();
+	glBegin(GL_QUADS);
+	glVertex2f(-5, 15);
+	glVertex2f(-10, 15);
+	glVertex2f(-10, 5);
+	glVertex2f(-5, 5);
+	glEnd();
+
+	glPopMatrix();
+}
+
+void DesenhaMergulhador(int x, int y) {
+	glPushMatrix();
+	glLineWidth(2);
+	glTranslatef(x, y, 0);
+	glScaled(0.7, 0.7, 1);
+
+	//CABEÇA
+	glColor3f(0, 0, 0);
+	glBegin(GL_POLYGON);
+	for (int i = 0; i < 10; i++) {
+		float ang = (2 * PI * i) / 10;
+		glVertex2f(cos(ang) * 8, sin(ang) * 8);
+	}
+	glEnd();
+
+	//CORPO
+	glBegin(GL_LINES);
+	glVertex2f(0, 0);
+	glVertex2f(-20, -20);
+	glEnd();
+
+	//BRAÇO DIREITO
+	glBegin(GL_LINES);
+	glVertex2f(-20, -12);
+	glVertex2f(5, -12);
+	glEnd();
+
+	//BRAÇO ESQUERDO
+	glBegin(GL_LINES);
+	glVertex2f(-20, -12);
+	glVertex2f(-10, -20);
+	glEnd();
+
+	//PERNA DIRETA
+	glBegin(GL_LINES);
+	glVertex2f(-20, -20);
+	glVertex2f(-22, -35);
+	glEnd();
+
+	//PERNA ESQUERDA
+	glBegin(GL_LINES);
+	glVertex2f(-20, -20);
+	glVertex2f(-40, -25);
+	glEnd();
+	glPopMatrix();
+}
+
+void animarOxigenio() {
+	//ANIMAR A BARRA DE OXIGENIO
+	if (posY < 150) {
+		if (barraoxigenio > -290) {
+			barraoxigenio -= 1;
+		}
+		else {
+			printf("se esqueceu de algo amigo ? respirar é sempre bom");
+			barraoxigenio += 290;
+			rodando = false;
+		}
+	}
+	else {
+		if (barraoxigenio < 0) {
+			barraoxigenio += 10;
+			if (barraoxigenio > 0) {
+				barraoxigenio = 0;
+			}
+		}
+	}
+}
+
+void colocarMegulhadores() {
+	//COLOCA OS MERGULHADORES
+	randomico = rand() % 45;
+	if (randomico == 0) {
+		//CHAMA MERGULHADOR SE TIVER MENOS QUE 4 ATIVOS
+		if (qtdmergulhadores < 4) {
+			qtdmergulhadores++;
+
+			//SE O MERGULHADOR ESTA FORA ELE É CHAMADO
+			if (mergulhador[0] == false) {
+				mergulhador[0] = true;
+				srand((unsigned)time(NULL));
+				merY[0] = (rand() % 210) - 150;
+			}
+			else if (mergulhador[1] == false) {
+				mergulhador[1] = true;
+				merY[1] = (rand() % 210) - 150;
+			}
+			else if (mergulhador[2] == false) {
+				mergulhador[2] = true;
+				merY[2] = (rand() % 210) - 150;
+			}
+		}
+	}
+}
+
+void animarMergulhador() {
+	if (mergulhador[0] == true) {
+		if (merX[0] < 435) {
+			merX[0] += 5;
+		}
+		else {
+			merX[0] = -450;
+			qtdmergulhadores--;
+			mergulhador[0] = false;
+		}
+	}
+
+	if (mergulhador[1] == true) {
+		if (merX[1] > -405) {
+			merX[1] -= 5;
+		}
+		else {
+			merX[1] = 450;
+			qtdmergulhadores--;
+			mergulhador[1] = false;
+		}
+	}
+
+	if (mergulhador[2] == true) {
+		if (merX[2] < 435) {
+			merX[2] += 5;
+		}
+		else {
+			merX[2] = -450;
+			qtdmergulhadores--;
+			mergulhador[2] = false;
+		}
+	}
+}
+
+void colocarTubaroes() {
+	randomico = rand() % 40;
+	if (randomico == 0) {
+		//CHAMA TUBARAO SE TIVER MENOS QUE 4 ATIVOS
+		if (qtdtubaroes < 4) {
+			qtdtubaroes++;
+			if (tubaroes[0] == false) {
+				tubaroes[0] = true;
+				srand((unsigned)time(NULL));
+				tubY[0] = (rand() % 210) - 150;
+			}
+			else if (tubaroes[1] == false) {
+				tubaroes[1] = true;
+				tubY[1] = (rand() % 210) - 150;
+			}
+			else if (tubaroes[2] == false) {
+				tubaroes[2] = true;
+				tubY[2] = (rand() % 210) - 150;
+			}
+		}
+	}
+}
+
+void animarTubaroes() {
+	//SE O TUBARAO ESTA ATIVO ELE VAI ATÉ O FIM E VOLTA AO INICIO
+	if (tubaroes[0] == true) {
+		if (tubX[0] < 435) {
+			tubX[0] += 5;
+		}
+		else {
+			tubX[0] = -450;
+			qtdtubaroes--;
+			tubaroes[0] = false;
+		}
+	}
+	if (tubaroes[1] == true) {
+		if (tubX[1] > -405) {
+			tubX[1] -= 5;
+		}
+		else {
+			tubX[1] = 450;
+			qtdtubaroes--;
+			tubaroes[1] = false;
+		}
+	}
+	if (tubaroes[2] == true) {
+		if (tubX[2] < 435) {
+			tubX[2] += 5;
+		}
+		else {
+			tubX[2] = -450;
+			qtdtubaroes--;
+			tubaroes[2] = false;
+		}
+	}
+}
+
+void colocarSubInimigo() {
+	//COLOCA OS SUBMARINOS RIVAIS NA TELA
+	randomico = rand() % 40;
+	if (randomico == 0) {
+		if (qtdsubmarinos < 3) {
+			qtdsubmarinos++;
+			if (submarinos[0] == false) {
+				submarinos[0] = true;
+				srand((unsigned)time(NULL));
+				subY[0] = (rand() % 210) - 150;
+			}
+			else if (submarinos[1] == false) {
+				submarinos[1] = true;
+				subY[1] = (rand() % 210) - 150;
+			}
+		}
+	}
+}
+
+void animarSubInimigo() {
+	if (submarinos[0] == true) {
+		if (subX[0] < 435) {
+			subX[0] += 5;
+		}
+		else {
+			subX[0] = -450;
+			qtdsubmarinos--;
+			submarinos[0] = false;
+		}
+	}
+
+	if (submarinos[1] == true) {
+		if (subX[1] > -405) {
+			subX[1] -= 5;
+		}
+		else {
+			subX[1] = 450;
+			qtdsubmarinos--;
+			submarinos[1] = false;
+		}
+	}
+}
+
+void atirar() {
+	if (tiro == true) {
+		if (tirodireita == true) {
+			tiroX += 30;
+			if (tiroX >= 800) {
+				tirodireita = false;
+				tiro = false;
+				if (esquerda == true) {
+					tiroX = posX - 180;
+				}
+				else {
+					tiroX = posX;
+				}
+			}
+		}
+		else if (tiroesquerda == true) {
+			tiroX -= 30;
+			if (tiroX <= -800) {
+				tiroesquerda = false;
+				tiro = false;
+				if (esquerda == true) {
+					tiroX = posX - 180;
+				}
+				else {
+					tiroX = posX;
+				}
+			}
+		}
+		else if (esquerda == false) {
+			tirodireita = true;
+		}
+		else if (esquerda == true) {
+			tiroesquerda = true;
+		}
+	}
+}
+
+void colisaoSubmarinos() {
+	//SE SUBMARINO BATER
+	if (esquerda == true) {
+		if (posX - 80 <= subX[0] && posX + 90 > subX[0] && posY > subY[0] - 10 && posY < subY[0] + 32) {
+			subX[0] = -450;
+			submarinos[0] = false;
+			qtdsubmarinos--;
+			printf("Perdeu mané");
+			rodando = false;
+		}
+	}
+	else {
+		if (posX + 98 >= subX[0] - 115 && posX < subX[0] - 15 && posY > subY[0] - 10 && posY < subY[0] + 32) {
+			subX[0] = -450;
+			submarinos[0] = false;
+			qtdsubmarinos--;
+			printf("Perdeu mané");
+			rodando = false;
+		}
+	}
+
+	//SE SUBMARINO BATER
+	if (esquerda == true) {
+		if (posX - 80 <= subX[1] && posX + 90 > subX[1] && posY > subY[1] - 10 && posY < subY[1] + 32) {
+			subX[1] = -450;
+			submarinos[1] = false;
+			qtdsubmarinos--;
+			printf("Perdeu mané");
+			rodando = false;
+		}
+	}
+	else {
+		if (posX + 98 >= subX[1] - 115 && posX < subX[1] - 15 && posY > subY[1] - 10 && posY < subY[1] + 32) {
+			subX[1] = -450;
+			submarinos[1] = false;
+			qtdsubmarinos--;
+			printf("Perdeu mané");
+			rodando = false;
+		}
+	}
+}
+
+void colisaoTubarao() {
+	//SE SUBMARINO BATER NO TUBARAO
+	if (esquerda == true) {
+		if (posX - 98 <= tubX[0] + 20 && posX > tubX[0] - 10 && posY > tubY[0] - 10 && posY < tubY[0] + 20) {
+			tubX[0] = -450;
+			tubaroes[0] = false;
+			qtdtubaroes--;
+			printf("Perdeu pra um tubarão sério ?");
+			rodando = false;
+		}
+	}
+	else {
+		if (posX + 98 >= tubX[0] - 15 && posX < tubX[0] + 35 && posY > tubY[0] - 10 && posY < tubY[0] + 20) {
+			tubX[0] = -450;
+			tubaroes[0] = false;
+			qtdtubaroes--;
+			printf("Perdeu pra um tubarão sério ?");
+			rodando = false;
+		}
+	}
+
+	//SE SUBMARINO BATER NO TUBARAO 
+	if (esquerda == true) {
+		if (posX - 98 <= tubX[1] + 20 && posX > tubX[1] - 10 && posY > tubY[1] - 10 && posY < tubY[1] + 20) {
+			tubX[1] = 450;
+			tubaroes[1] = false;
+			qtdtubaroes--;
+			printf("Perdeu pra um tubarão sério ?");
+			rodando = false;
+		}
+	}
+	else {
+		if (posX + 98 >= tubX[1] - 15 && posX < tubX[1] + 35 && posY > tubY[1] - 10 && posY < tubY[1] + 20) {
+			tubX[1] = 450;
+			tubaroes[1] = false;
+			qtdtubaroes--;
+			printf("Perdeu pra um tubarão sério ?");
+			rodando = false;
+		}
+	}
+
+	//SE SUBMARINO BATER NO TUBARAO 
+	if (esquerda == true) {
+		if (posX - 98 <= tubX[2] + 20 && posX > tubX[2] - 10 && posY > tubY[2] - 10 && posY < tubY[2] + 20) {
+			tubX[2] = 450;
+			tubaroes[2] = false;
+			qtdtubaroes--;
+			printf("Perdeu pra um tubarão sério ?");
+			rodando = false;
+		}
+	}
+	else {
+		if (posX + 98 >= tubX[2] - 15 && posX < tubX[2] + 35 && posY > tubY[2] - 10 && posY < tubY[2] + 20) {
+			tubX[2] = 450;
+			tubaroes[2] = false;
+			qtdtubaroes--;
+			printf("Perdeu pra um tubarão sério ?");
+			rodando = false;
+		}
+	}
+}
+
+void colisaoMergulhador() {
+	//SE SUBMARINO BATER NO MERGULHADOR 
+	if (esquerda == true) {
+		if (posX - 98 <= merX[0] && posX > merX[0] - 15 && posY > merY[0] - 30 && posY < merY[0] + 20) {
+			merX[0] = -450;
+			mergulhador[0] = false;
+			qtdmergulhadores--;
+			placar += 1;
+			std::cout << "Pegou um mergulhador, seu score é: " << placar << std::endl;
+
+			if (placar >= 10)
+			{
+				printf("Parabéns voce ganhou !");
+				rodando = false;
+			}
+		}
+	}
+	else {
+		if (posX + 98 >= merX[0] - 20 && posX < merX[0] - 15 && posY > merY[0] - 30 && posY < merY[0] + 10) {
+			merX[0] = -450;
+			mergulhador[0] = false;
+			qtdmergulhadores--;
+			placar += 1;
+			std::cout << "Pegou um mergulhador, seu score é: " << placar << std::endl;
+
+			if (placar >= 10)
+			{
+				printf("Parabéns voce ganhou !");
+				rodando = false;
+			}
+		}
+	}
+
+	//SE SUBMARINO BATER NO MERGULHADOR 1
+	if (esquerda == true) {
+		if (posX - 98 <= merX[1] + 15 && posX > merX[1] - 15 && posY > merY[1] - 30 && posY < merY[1] + 20) {
+			merX[1] = 450;
+			mergulhador[1] = false;
+			qtdmergulhadores--;
+			placar += 1;
+
+			std::cout << "Pegou um mergulhador, seu score é: " << placar << std::endl;
+			if (placar >= 10)
+			{
+				printf("Parabéns voce ganhou !");
+				rodando = false;
+			}
+		}
+	}
+	else {
+		if (posX + 98 >= merX[1] - 10 && posX < merX[1] - 15 && posY > merY[1] - 30 && posY < merY[1] + 10) {
+			merX[1] = 450;
+			mergulhador[1] = false;
+			placar += 1;
+			qtdmergulhadores--;
+
+			std::cout << "Pegou um mergulhador, seu score é: " << placar << std::endl;
+
+			if (placar >= 10)
+			{
+				printf("Parabéns voce ganhou !");
+				rodando = false;
+			}
+		}
+	}
+
+	//SE SUBMARINO BATER NO MERGULHADOR
+	if (esquerda == true) {
+		if (posX - 98 <= merX[2] && posX > merX[2] - 15 && posY > merY[2] - 30 && posY < merY[2] + 20) {
+			merX[2] = -450;
+			mergulhador[2] = false;
+			qtdmergulhadores--;
+			placar += 1;
+
+			std::cout << "Pegou um mergulhador, seu score é: " << placar << std::endl;
+
+			if (placar >= 10)
+			{
+				printf("Parabéns voce ganhou !");
+				rodando = false;
+			}
+		}
+	}
+	else {
+		if (posX + 98 >= merX[2] - 20 && posX < merX[2] - 15 && posY > merY[2] - 30 && posY < merY[2] + 10) {
+			merX[2] = -450;
+			mergulhador[2] = false;
+			qtdmergulhadores--;
+			placar += 1;
+
+			std::cout << "Pegou um mergulhador, seu score é: " << placar << std::endl;
+
+			if (placar >= 10)
+			{
+				printf("Parabéns voce ganhou !");
+				rodando = false;
+			}
+		}
+	}
+}
+
+void colisaoTiroTubarao() {
+	if (tiro == true) {
+		if (tiroX + 80 <= tubX[0] + 15 && tiroX + 80 >= tubX[0] - 30 && tiroY + 5 >= tubY[0] + 10 && tiroY + 5 <= tubY[0] + 25) {
+			qtdtubaroes--;
+			tubX[0] = -450;
+			tubaroes[0] = false;
+			tiro = false;
+			if (esquerda == true) {
+				tiroX = posX - 180;
+			}
+			else {
+				tiroX = posX;
+			}
+			tiroesquerda = false;
+			tirodireita = false;
+		}
+	}
+}
+
+void desenhar() {
+	DesenhaFundo();
+	DesenhaSubmarino();
+	DesenhaBala();
+
+	//DESENHA OS MERGULHADORES
+	if (mergulhador[0] == true) DesenhaMergulhador(merX[0], merY[0]);
+	if (mergulhador[1] == true) DesenhaMergulhador(merX[1], merY[1]);
+	if (mergulhador[2] == true) DesenhaMergulhador(merX[2], merY[2]);
+
+	//DESENHA OS TUBAROES
+	if (tubaroes[0] == true) DesenhaTubarao(tubX[0], tubY[0]);
+	if (tubaroes[1] == true) DesenhaTubarao(tubX[1], tubY[1]);
+	if (tubaroes[2] == true) DesenhaTubarao(tubX[2], tubY[2]);
+
+	//DESENHA OS SUBMARINOS INIMIGOS
+	if (submarinos[0] == true) DesenhaSubmarinoInimigo(subX[0], subY[0]);
+	if (submarinos[1] == true) DesenhaSubmarinoInimigo(subX[1], subY[1]);
+}
+
+void animacao(int valor) {
+	if (rodando) {
+		animarOxigenio();
+		atirar();
+
+		colocarMegulhadores();
+		colocarTubaroes();
+		colocarSubInimigo();
+
+		animarMergulhador();
+		animarTubaroes();
+		animarSubInimigo();
+
+		colisaoSubmarinos();
+		colisaoTubarao();
+		colisaoMergulhador();
+		colisaoTiroTubarao();
+	}
+
+	glutPostRedisplay();
+	glutTimerFunc(100, animacao, 1);
+}
+
+// TODO arrumar a bala não acompanha o submarino
+void keyboard(unsigned char tecla, int x, int y) {
+	if (tecla == 'w' || tecla == 'W') {
+		if (posY != 150) {
+			posY += 10;
+			if (tiro == false) {
+				tiroY += 10;
+			}
+		}
+	}
+	if (tecla == 's' || tecla == 'S') {
+		if (posY != -140) {
+			posY -= 10;
+
+			if (tiro == false) {
+				tiroY -= 10;
+			}
+		}
+	}
+	if (tecla == 'a' || tecla == 'A') {
+		if (posX != -300) {
+			posX -= 20;
+			if (tiro == false) {
+				tiroX -= 20;
+			}
+		}
+		if (esquerda == false) {
+			esquerda = true;
+			posX += 100;
+			if (tiro == false) tiroX -= 80;
+		}
+
+	}
+	if (tecla == 'd' || tecla == 'D') {
+		if (posX != 300) {
+			posX += 20;
+			if (tiro == false) {
+				tiroX += 20;
+			}
+		}
+		if (esquerda == true) {
+			esquerda = false;
+			posX -= 100;
+			if (tiro == false) tiroX += 80;
+		}
+	}
+	if (tecla == '0') {
+		if (rodando == true) {
+			tiro = tiro == false ? true : false;
+		}
+	}
+	if (tecla == 'p' || tecla == 'P') {
+		if (rodando) rodando = false;
+		else rodando = true;
+		if (pausado) pausado = false;
+		else pausado = true;
+	}
+	glutPostRedisplay();
+}
+
+void display() {
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);  // cor do fundo
+	glClear(GL_COLOR_BUFFER_BIT);
+	glTranslatef(janela_largura / 2, janela_altura / 2, 0);
+	glViewport(0, 0, janela_largura, janela_altura);
+	desenhar();
+	glutSwapBuffers();
+}
+
+void tela(GLsizei w, GLsizei h) {
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+	gluOrtho2D(0, janela_largura, 0, janela_altura);
+	glMatrixMode(GL_MODELVIEW);
+}

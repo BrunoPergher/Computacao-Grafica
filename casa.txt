@@ -1,0 +1,118 @@
+#include <stdlib.h>
+#include <GL/glut.h>
+
+void resize(GLsizei w, GLsizei h);
+void display(void);
+
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);  // controla se o sistema operacional tem suporte a janelas.
+
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);  // quantidade de buffer de cores e que o padrao de cores é RGB ou RGBA
+
+	glutInitWindowSize(600, 600);  // tamanho da janela
+
+	//glutFullScreen();  // full screen
+
+	glutInitWindowPosition(100, 100); // posicao inicial da janela
+
+	glutCreateWindow("Bruno Pergher - Casa");
+
+	glutReshapeFunc(&resize); // 
+
+	glutDisplayFunc(display);
+
+	glutMainLoop();
+
+	return EXIT_SUCCESS;
+}
+
+void resize(GLsizei w, GLsizei h)
+{
+	if (h == 0) h = 1;  // Evita a divisao por zero
+
+	glViewport(0, 0, w, h);  // Especifica as dimensões da Viewport
+
+	// Inicializa o sistema de coordenadas
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	// Estabelece a janela de seleção (left, right, bottom, top)
+	gluOrtho2D(0.0f, 400.0f, 0.0f, 400.0f);
+
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void display()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);  // cor do fundo
+
+	glClear(GL_COLOR_BUFFER_BIT);  // limpa a tela com a cor do fundo
+	glTranslatef(400 / 2, 400 / 2, 0.0f); // largura e altura da janela por 2 
+
+	glBegin(GL_QUADS); // grama
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glVertex2f(-200, -200);
+	glVertex2f(200, -200);
+	glVertex2f(200, -150);
+	glVertex2f(-200, -150);
+	glEnd();
+
+	glBegin(GL_QUADS); // parede
+	glColor3f(100.0f, 50.0f, 50.0f);
+	glVertex2f(-80, -150);
+	glVertex2f(80, -150);
+	glVertex2f(80, -50);
+	glVertex2f(-80, -50);
+	glEnd();
+
+	glBegin(GL_TRIANGLES); // telhado
+	glColor3b(106.0f, 65.0f, 30.0f);
+	glVertex2f(-100, -50);
+	glVertex2f(100, -50);
+	glVertex2f(0, 25);
+	glEnd();
+
+	glBegin(GL_QUADS); // janela
+	glColor3f(0.0f, 0.0f, 1.0f);
+	glVertex2f(-50, -75);
+	glVertex2f(-50, -125);
+	glVertex2f(0, -125);
+	glColor3f(255.0f, 255.0f, 255.0f);
+	glVertex2f(0, -75);
+	glEnd();
+
+	glBegin(GL_QUADS); // porta
+	glColor3b(106.0f, 65.0f, 30.0f);
+	glVertex2f(25, -75);
+	glVertex2f(25, -150);
+	glVertex2f(60, -150);
+	glVertex2f(60, -75);
+	glEnd();
+
+	glPointSize(5.0f); // door handle
+	glBegin(GL_POINTS);
+	glColor3b(0.0f, 0.0f, 0.0f);
+	glVertex2f(50, -110);
+	glEnd();
+
+	glBegin(GL_QUADS); // chamine
+	glColor3b(106.0f, 65.0f, 30.0f);
+	glVertex2f(-50, -12);
+	glVertex2f(-25, 7);
+	glVertex2f(-25, 40);
+	glVertex2f(-50, 40);
+	glEnd();
+
+	glBegin(GL_QUADS); // sol
+	glColor3ub(239, 227, 0);
+	glVertex2f(150, 150);
+	glVertex2f(125, 150);
+	glVertex2f(125, 125);
+	glVertex2f(150, 125);
+	glEnd();
+
+	glFlush(); // executa o desenho 
+}

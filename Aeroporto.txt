@@ -1,0 +1,169 @@
+#include <stdlib.h>
+#include <GL/glut.h>
+
+void resize(GLsizei w, GLsizei h);
+void display(void);
+
+int main(int argc, char** argv)
+{
+	glutInit(&argc, argv);  // controla se o sistema operacional tem suporte a janelas.
+
+	glutInitDisplayMode(GLUT_SINGLE | GLUT_RGB);  // quantidade de buffer de cores e que o padrao de cores é RGB ou RGBA
+
+	glutInitWindowSize(600, 600);  // tamanho da janela
+
+	//glutFullScreen();  // full screen
+
+	glutInitWindowPosition(100, 100); // posicao inicial da janela
+
+	glutCreateWindow("Bruno Pergher - Aeroporto");
+
+	glutReshapeFunc(&resize); // 
+
+	glutDisplayFunc(display);
+
+	glutMainLoop();
+
+	return EXIT_SUCCESS;
+}
+
+void resize(GLsizei w, GLsizei h)
+{
+	if (h == 0) h = 1;  // Evita a divisao por zero
+
+	glViewport(0, 0, w, h);  // Especifica as dimensões da Viewport
+
+	// Inicializa o sistema de coordenadas
+	glMatrixMode(GL_PROJECTION);
+	glLoadIdentity();
+
+	// Estabelece a janela de seleção (left, right, bottom, top)
+	gluOrtho2D(0.0f, 400.0f, 0.0f, 400.0f);
+
+	glMatrixMode(GL_MODELVIEW);
+}
+
+void display()
+{
+	glMatrixMode(GL_MODELVIEW);
+	glLoadIdentity();
+	glClearColor(0.0f, 0.0f, 1.0f, 1.0f);  // cor do fundo
+
+	glClear(GL_COLOR_BUFFER_BIT);  // limpa a tela com a cor do fundo
+	glTranslatef(400 / 2, 400 / 2, 0.0f); // largura e altura da janela por 2 
+
+	// corpo aviao
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_POLYGON);
+	glVertex2f(0.0, 30.0);
+	glVertex2f(0.0, 55.0);
+	glVertex2f(135.0, 55.0);
+	glVertex2f(135.0, 30.0);
+	glEnd();
+
+	//bico aviao cima
+	glBegin(GL_POLYGON);
+	glVertex2f(135.0, 55.0);
+	glVertex2f(150.0, 50.0);
+	glVertex2f(155.0, 45.0);
+	glVertex2f(160.0, 40.0);
+	glVertex2f(135.0, 40.0);
+	glEnd();
+
+	//bico aviao baixo
+	glColor3f(1.0, 1.0, 1.0);
+	glBegin(GL_POLYGON);
+	glVertex2f(135.0, 40.0);
+	glVertex2f(160.0, 40.0);
+	glVertex2f(160.0, 37.0);
+	glVertex2f(145.0, 30.0);
+	glVertex2f(135.0, 30.0);
+	glEnd();
+
+	// asa traseira
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_POLYGON);
+	glVertex2f(0.0, 55.0);
+	glVertex2f(0.0, 80.0);
+	glVertex2f(10.0, 80.0);
+	glVertex2f(40.0, 55.0);
+	glEnd();
+
+	// asa esquerda
+	glColor3f(1.0, 0.0, 0.0);
+	glBegin(GL_POLYGON);
+	glVertex2f(65.0, 55.0);
+	glVertex2f(50.0, 70.0);
+	glVertex2f(75.0, 70.0);
+	glVertex2f(90.0, 55.0);
+	glEnd();
+
+	// asa direita 
+	glBegin(GL_POLYGON);
+	glVertex2f(70.0, 40.0);
+	glVertex2f(100.0, 40.0);
+	glVertex2f(80.0, 15.0);
+	glVertex2f(50.0, 15.0);
+	glEnd();
+
+	// pista
+	glBegin(GL_QUADS); 
+	glColor3f(0.5, 0.5, 0.5);
+	glVertex2f(-200, -70);
+	glVertex2f(200, -70);
+	glVertex2f(200, -150);
+	glVertex2f(-200, -150);
+	glEnd();
+
+	// Desenhar a linha branca
+	glLineWidth(5.0);
+	glColor3f(1.0, 1.0, 1.0); // Cor branca para a linha
+	glBegin(GL_LINES);
+	glVertex2f(-200, -110);  // Canto inferior esquerdo
+	glVertex2f(200, -110);   // Canto inferior direito
+	glEnd();
+
+	glBegin(GL_QUADS); // pista
+	glColor3f(0.5, 0.5, 0.5);
+	glVertex2f(-200, -110);
+	glVertex2f(200, -110);
+	glVertex2f(200, -150);
+	glVertex2f(-200, -150);
+	glEnd();
+
+	glBegin(GL_QUADS); // grama
+	glColor3f(0.0f, 1.0f, 0.0f);
+	glVertex2f(-200, -200);
+	glVertex2f(200, -200);
+	glVertex2f(200, -150);
+	glVertex2f(-200, -150);
+	glEnd();
+
+	// Desenhar o tronco da árvore
+	glColor3f(0.5, 0.3, 0.0); // Cor marrom para o tronco da árvore
+	glBegin(GL_POLYGON);
+	glVertex2f(-175, -190);
+	glVertex2f(-125, -190);
+	glVertex2f(-125, -90);
+	glVertex2f(-175, -90);
+
+	glEnd();
+
+	// Desenhar a copa da árvore
+	glColor3f(0.0, 0.8, 0.0); // Cor verde para a copa da árvore
+	glBegin(GL_TRIANGLES);
+	glVertex2f(-200, -90);
+	glVertex2f(-100, -90);
+	glVertex2f(-150, 20);
+	glEnd();
+
+	glBegin(GL_QUADS); // sol
+	glColor3ub(239, 227, 0);
+	glVertex2f(150, 150);
+	glVertex2f(125, 150);
+	glVertex2f(125, 125);
+	glVertex2f(150, 125);
+	glEnd();
+
+	glFlush(); // executa o desenho 
+}
